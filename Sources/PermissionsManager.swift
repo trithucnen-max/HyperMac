@@ -59,15 +59,32 @@ public class PermissionsManager: ObservableObject {
         }
 
         // Poll every 1.5s so when user toggles permission in System Settings, UI instantly updates
+        startPolling()
+    }
+
+    deinit {
+        pollTimer?.invalidate()
+    }
+
+    public func setSystemSleepState(_ asleep: Bool) {
+        if asleep {
+            pollTimer?.invalidate()
+            pollTimer = nil
+        } else {
+            refreshStatus()
+            if pollTimer == nil {
+                startPolling()
+            }
+        }
+    }
+
+    private func startPolling() {
+        pollTimer?.invalidate()
         pollTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.refreshStatus()
             }
         }
-    }
-
-    deinit {
-        pollTimer?.invalidate()
     }
 
     // MARK: - Live Permission Checks

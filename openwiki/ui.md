@@ -27,17 +27,20 @@ flowchart TD
 
 ---
 
-## 2. Main Popover & Tab Views
+## 2. Main Popover & Modular Tab Views
 
-1. **[`Views.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/Views.swift) (3,630 lines)**
-   - Hosts `ContentView`, the root 4-tab container (`selectedTab: 0..3`), top header bar (Permissions status badge, Language toggle EN/VI, Update badge, Settings gear), and footer bar.
-   - **Tab 0 (`Displays`)**: Per-display cards with interactive brightness sliders (`1%–100%`), resolution picker (`DisplayMode`), rotation selector (`0°/90°/180°/270°`), Connect/Disconnect buttons, Virtual Display creator (`1080p` / `1440p` / `4K`), Primary Screen Blackout toggle, and Caffeinate timer presets (`15m`, `30m`, `1h`, `2h`, `∞`).
-   - **Tab 1 (`Windows`)**: Interactive configuration cards for AltTab (`WindowManager`), Window Snapping (`WindowSnapManager` with visual keyboard shortcut grid), Clipboard History (`ClipboardManager` with max items `20–200` and retention policy `0/7/30/90` days), Finder Cut & Paste (`FinderCutPasteManager`), LightShot Screenshot (`ScreenshotManager`), and Menu Bar Hider (`MenuBarHiderManager`).
-   - **Tab 2 (`System`)**:
-     - **Battery & Power Card**: Live wattage/voltage/amperage/temperature metrics, Charge Limit slider (`50%–100%` in 5% steps), Helper installation prompt, Sleep Guard toggles, and 3-step Auto-Calibration wizard.
-     - **CPU Freezer (`ProcessEnergyManager`)**: Lists top background CPU consumers with 1-click Freeze/Resume toggles.
-     - **Thermal & Fan Card ([`FanControlCardView.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/FanControlCardView.swift))**: Displays live CPU/GPU/Battery/SSD temperatures and Fan RPM gauges with `System` / `50%` / `75%` / `Max` / Custom slider controls and a 90°C thermal override banner.
-     - **Disk & NAS Speed Card**: Per-volume Read/Write throughput bars, top disk I/O process badge, and menu bar live speed toggle.
+1. **[`Views.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/Views.swift) (438 lines — Root Container, Header, TabBar & Footer)**
+   - Hosts `MainView` (the 4-tab container `selectedMainTab: 0..3`), `ModernHeaderBar`, `TopTabBar`, and `FooterView`.
+2. **[`ModalsView.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/ModalsView.swift) (672 lines — Overlay Modals)**
+   - Hosts `UpdateModalView`, `DonateModalView`, and `ActivationModalView`.
+3. **[`DisplaysTabView.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/DisplaysTabView.swift) (607 lines — Tab 0: Displays)**
+   - Per-display cards (`DisplayCardView`) with interactive brightness sliders (`0%–100%`), `25%/50%/75%/100%` presets, soft-disconnect toggles, `VirtualDisplayCardView` (HiDPI dummy display + Primary Screen Blackout), `CaffeinateCardView`, `MenuBarHiderCardView`, and `QuickActionsBar`.
+3. **[`HardwareCareTabView.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/HardwareCareTabView.swift) (~938 lines — Tab 1: Hardware & Battery)**
+   - Hosts `HardwareCareTabView`, `FileTransferSpeedCard` (physical drives + NAS LAN throughput), and `BatteryCardView` (4 sub-tabs: SMC Power Limit, Sleep Guard, CPU Process Freeze, and 3-step Auto-Calibration).
+4. **[`ThermalAndFanCardView.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/ThermalAndFanCardView.swift) (~316 lines) & [`FanControlCardView.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/FanControlCardView.swift) (183 lines)**
+   - Renders Apple Silicon 6-sensor HID PMU thermal matrix, expandable 30+ sensor accordion, and SMC Fan RPM controller (`System` / `Medium` / `High` / Custom slider) with a 90°C safety trip and crash watchdog.
+5. **[`ShortcutsTabView.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/ShortcutsTabView.swift) (~664 lines — Tab 2: Shortcuts & Windows)**
+   - Interactive configuration cards for Launch at Login, Caffeinate, Menu Bar Drawer, Finder Cut & Paste (`⌘X → ⌘V`), AltTab Window Switcher (`WindowManager`), Window Snapping (`WindowSnapManager`), Clipboard History (`ClipboardManager`), LightShot Screenshot (`ScreenshotManager`), and Mouse Chording.
 
 2. **[`CleanerTabView.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/CleanerTabView.swift) (629 lines)**
    - Sub-tabbed interface (`Junk`, `Apps`, `Large`):

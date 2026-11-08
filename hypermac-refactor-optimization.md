@@ -41,11 +41,12 @@ HyperMac-main/
     ├── ClipboardManager.swift          # [CẬP NHẬT] Hỗ trợ pause/resume polling khi màn hình ngủ
     ├── ThermalManager.swift            # [CẬP NHẬT] Hỗ trợ pause/resume HID sensor polling khi màn hình ngủ
     ├── PermissionsManager.swift        # [CẬP NHẬT] Hỗ trợ pause/resume TCC polling khi màn hình ngủ
-    ├── Views.swift                     # [TÁI CẤU TRÚC] Còn ~850 dòng: ContentView, ModernHeaderBar, TopTabBar, FooterView, Modals
-    ├── DisplaysTabView.swift           # [MỚI] Tách từ Views.swift: DisplaysTabView, DisplayCardView, VirtualDisplayCardView, CaffeinateCardView, MenuBarHiderCardView, QuickActionsBar
-    ├── ShortcutsTabView.swift          # [MỚI] Tách từ Views.swift: ShortcutsTabView (AltTab, WindowSnap, Clipboard, Finder Cut/Paste, Screenshot cards)
-    ├── HardwareCareTabView.swift       # [MỚI] Tách từ Views.swift: HardwareCareTabView, BatteryCardView, FileTransferSpeedCard
-    ├── ThermalAndFanCardView.swift     # [MỚI] Tách từ Views.swift: ThermalAndFanCardView (cùng FanControlCardView.swift sẵn có)
+    ├── Views.swift                     # [TÁI CẤU TRÚC] Còn 438 dòng: MainView, ModernHeaderBar, TopTabBar, FooterView
+    ├── ModalsView.swift                # [MỚI] Tách từ Views.swift (672 dòng): UpdateModalView, DonateModalView, ActivationModalView
+    ├── DisplaysTabView.swift           # [MỚI] Tách từ Views.swift (607 dòng): DisplaysTabView, DisplayCardView, VirtualDisplayCardView, CaffeinateCardView, MenuBarHiderCardView, QuickActionsBar
+    ├── ShortcutsTabView.swift          # [MỚI] Tách từ Views.swift (667 dòng): ShortcutsTabView (AltTab, WindowSnap, Clipboard, Finder Cut/Paste, Screenshot cards)
+    ├── HardwareCareTabView.swift       # [MỚI] Tách từ Views.swift (942 dòng): HardwareCareTabView, BatteryCardView, FileTransferSpeedCard
+    ├── ThermalAndFanCardView.swift     # [MỚI] Tách từ Views.swift (317 dòng): ThermalAndFanCardView (cùng FanControlCardView.swift sẵn có)
     └── CleanerTabView.swift            # [GIỮ NGUYÊN] Tab dọn rác đã tách sẵn (629 dòng)
 ```
 
@@ -72,7 +73,7 @@ flowchart LR
 
 ### 🟢 Giai đoạn 0: Chuẩn bị & An toàn Mã nguồn (Vibe-Code Safety Protocol)
 
-- [ ] **Task 0: Khởi tạo nhánh Git riêng & Kiểm tra Baseline Build**
+- [x] **Task 0: Khởi tạo nhánh Git riêng & Kiểm tra Baseline Build**
   - **Agent**: `devops-engineer` | **Skill**: `@[skills/verify-changes]`
   - **Priority**: P0 (Blocker) | **Dependencies**: None
   - **INPUT**: Nhánh hiện tại của `/Users/kimtrungduong/Downloads/HyperMac-main`.
@@ -84,7 +85,7 @@ flowchart LR
 
 ### 🔵 Giai đoạn 1: Phương án B — Hiện đại hoá Hệ thống, Phần cứng & Zero-Polling
 
-- [ ] **Task 1: Loại bỏ đường dẫn Hardcode cá nhân & Chuẩn hoá Resource Lookup**
+- [x] **Task 1: Loại bỏ đường dẫn Hardcode cá nhân & Chuẩn hoá Resource Lookup**
   - **Agent**: `backend-specialist` | **Skill**: `@[skills/clean-code]`
   - **Priority**: P0 | **Dependencies**: Task 0
   - **Why**: Trong [`ActivationManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/ActivationManager.swift#L132-L133) và [`Resources/displaycontrol-power`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Resources/displaycontrol-power#L11-L12) đang trỏ cứng tới `/Users/khacdai24/Desktop/HyperMac/...`, gây lỗi nếu chạy bản dev trên máy khác.
@@ -95,7 +96,7 @@ flowchart LR
   - **VERIFY**: Chạy `grep -rn "khacdai24" Sources/ Resources/` trả về `0` kết quả; `swift build` PASS.
   - **Rollback**: `git checkout -- Sources/ActivationManager.swift Resources/displaycontrol-power`.
 
-- [ ] **Task 2: Chuyển đổi IEEE-754 Float32 Hex sang Swift thuần & Thêm Watchdog bảo vệ Quạt khi Crash**
+- [x] **Task 2: Chuyển đổi IEEE-754 Float32 Hex sang Swift thuần & Thêm Watchdog bảo vệ Quạt khi Crash**
   - **Agent**: `backend-specialist` | **Skill**: `@[skills/clean-code]`
   - **Priority**: P1 | **Dependencies**: Task 1
   - **Why**:
@@ -120,7 +121,7 @@ flowchart LR
     - Kiểm tra cú pháp `bash -n Resources/displaycontrol-power` exit code `0`.
   - **Rollback**: `git checkout -- Sources/FanManager.swift Resources/displaycontrol-power`.
 
-- [ ] **Task 3: Triển khai Cơ chế Zero-Polling khi Màn hình Tắt / Khoá máy (Adaptive Power Saving)**
+- [x] **Task 3: Triển khai Cơ chế Zero-Polling khi Màn hình Tắt / Khoá máy (Adaptive Power Saving)**
   - **Agent**: `backend-specialist` | **Skill**: `@[skills/performance-profiling]`
   - **Priority**: P1 | **Dependencies**: Task 0
   - **Why**: Khi người dùng khoá máy hoặc màn hình tắt (`screensDidSleepNotification`), việc quét `NSPasteboard` mỗi `0,35s` (`ClipboardManager`), quét cảm biến nhiệt mỗi `5s` (`ThermalManager`), quét SMC fan mỗi `3s` (`FanManager`, trừ khi đang chạy Manual Fan cần giữ cầu chì nhiệt 90°C!) và quét TCC mỗi `2s` (`PermissionsManager`) là hoàn toàn dư thừa, gây tiêu hao pin ngầm.
@@ -138,7 +139,7 @@ flowchart LR
 
 ### 🟣 Giai đoạn 2: Phương án A — Tái cấu trúc Modular UI (`Views.swift` 3.630 dòng → 5 File chuyên biệt)
 
-- [ ] **Task 4: Tách `DisplaysTabView.swift` và `ShortcutsTabView.swift`**
+- [x] **Task 4: Tách `DisplaysTabView.swift` và `ShortcutsTabView.swift`**
   - **Agent**: `frontend-specialist` | **Skill**: `@[skills/simplify-code]`, `@[skills/clean-code]`
   - **Priority**: P2 | **Dependencies**: Task 1
   - **Why**: Tách 2 tab lớn nhất về hiển thị và phím tắt/cửa sổ ra khỏi `Views.swift` để cô lập phạm vi biên dịch.
@@ -149,7 +150,7 @@ flowchart LR
   - **VERIFY**: `swift build` biên dịch thành công không phát sinh lỗi thiếu symbol hay `private` access control.
   - **Rollback**: `git checkout -- Sources/Views.swift && rm -f Sources/DisplaysTabView.swift Sources/ShortcutsTabView.swift`.
 
-- [ ] **Task 5: Tách `HardwareCareTabView.swift` và `ThermalAndFanCardView.swift`**
+- [x] **Task 5: Tách `HardwareCareTabView.swift`, `ThermalAndFanCardView.swift` và `ModalsView.swift`**
   - **Agent**: `frontend-specialist` | **Skill**: `@[skills/simplify-code]`, `@[skills/clean-code]`
   - **Priority**: P2 | **Dependencies**: Task 2, Task 3, Task 4
   - **Why**: Tách toàn bộ giao diện Quản lý Pin, Sạc SMC, Sleep Guard, Auto-Calibration, CPU Freezer, Tốc độ Ổ cứng/NAS và Nhiệt độ/Quạt thành 2 module rõ ràng.
@@ -160,7 +161,7 @@ flowchart LR
   - **VERIFY**: `swift build` biên dịch thành công; kiểm tra dung lượng `Sources/Views.swift` giảm từ `3.630` dòng xuống còn `~890` dòng (chỉ còn `ContentView`, `ModernHeaderBar`, `TopTabBar`, `FooterView`, `UpdateModalView`, `DonateModalView`, `ActivationModalView`).
   - **Rollback**: `git checkout -- Sources/Views.swift && rm -f Sources/HardwareCareTabView.swift Sources/ThermalAndFanCardView.swift`.
 
-- [ ] **Task 6: Đồng bộ tài liệu `openwiki/` và `AGENTS.md` với cấu trúc mới**
+- [x] **Task 6: Đồng bộ tài liệu `openwiki/` và `AGENTS.md` với cấu trúc mới**
   - **Agent**: `explorer-agent` | **Skill**: `@[skills/openwiki]`
   - **Priority**: P3 | **Dependencies**: Task 4, Task 5
   - **INPUT**: `openwiki/ui.md`, `openwiki/patterns.md`, `openwiki/ipc.md`.
@@ -171,16 +172,24 @@ flowchart LR
 
 ### 🏁 Phase X: Kiểm thử Tổng thể & Nghiệm thu (Final Verification)
 
-- [ ] **Task 7 (Phase X): Build Release, Kiểm chứng Kỹ thuật & Đóng dấu Hoàn thành**
+- [x] **Task 7 (Phase X): Build Release, Kiểm chứng Kỹ thuật & Đóng dấu Hoàn thành**
   - **Agent**: `test-engineer` | **Skill**: `@[skills/verify-changes]`, `@[skills/lint-and-validate]`
   - **Priority**: P0 (Final Gate) | **Dependencies**: Task 1–6
   - **Các bước kiểm tra bắt buộc**:
-    1. **Kiểm tra Biên dịch Release**: `swift build -c release` (0 errors).
-    2. **Kiểm tra Cú pháp Shell Scripts**: `bash -n Resources/displaycontrol-power && bash -n Resources/install-helper.sh && bash -n build.sh`.
+    1. **Kiểm tra Biên dịch Release**: `swift build -c release` (0 errors — `Build complete! (72.08s)`).
+    2. **Kiểm tra Cú pháp Shell Scripts**: `bash -n Resources/displaycontrol-power && bash -n Resources/install-helper.sh && bash -n build.sh` (PASS).
     3. **Kiểm tra Dọn sạch Tech Debt**:
-       - `grep -rn "khacdai24" Sources/ Resources/` → Trả về rỗng.
-       - `grep -n "python3" Resources/displaycontrol-power` → Trả về rỗng.
-       - `wc -l Sources/Views.swift` → `< 950` dòng.
-    4. **Kiểm tra Bảo mật (`security_scan.py`)**: Chạy `python3 /Users/kimtrungduong/Downloads/.agents/skills/vulnerability-scanner/scripts/security_scan.py /Users/kimtrungduong/Downloads/HyperMac-main`.
-    5. **Review `git diff`**: Đảm bảo không làm thay đổi bất kỳ key `UserDefaults` hay Bundle ID `com.opensource.hypermac` nào.
+       - `grep -rn "khacdai24" Sources/ Resources/` → Trả về rỗng (`0` kết quả).
+       - `grep -nE "python3|perl" Resources/displaycontrol-power` → Trả về rỗng (`0` kết quả; dùng Swift thuần + POSIX `awk`).
+       - `wc -l Sources/Views.swift` → `438` dòng (giảm 88% từ `3.630` dòng).
+    4. **Kiểm tra Bảo mật (`security_scan.py`)**: `0` vấn đề trong `Sources/` và `Resources/` (Supply chain: OK, Code patterns: OK, Config: OK).
+    5. **Review `git diff`**: Không làm thay đổi bất kỳ key `UserDefaults` hay Bundle ID `com.opensource.hypermac` nào; tương thích ngược 100% với `HELPER_VERSION:2`.
+
+---
+
+## ✅ PHASE X COMPLETE
+- **Lint & Shell Syntax**: ✅ Pass (`bash -n`, `swift build`)
+- **Security**: ✅ No critical issues in `Sources/` or `Resources/`
+- **Build (`swift build -c release`)**: ✅ Success (`72.08s`, 0 errors)
+- **Date**: 09/11/2026
 

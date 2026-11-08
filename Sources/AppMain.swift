@@ -95,6 +95,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         // Register for display reconfiguration
         CGDisplayRegisterReconfigurationCallback(displayReconfigCallback, nil)
 
+        // Adaptive Zero-Polling: tạm dừng quét định kỳ khi màn hình tắt/khoá phiên và bật lại khi thức dậy
+        let wsNC = NSWorkspace.shared.notificationCenter
+        wsNC.addObserver(self, selector: #selector(handleScreensDidSleep), name: NSWorkspace.screensDidSleepNotification, object: nil)
+        wsNC.addObserver(self, selector: #selector(handleScreensDidWake), name: NSWorkspace.screensDidWakeNotification, object: nil)
+        wsNC.addObserver(self, selector: #selector(handleScreensDidSleep), name: NSWorkspace.sessionDidResignActiveNotification, object: nil)
+        wsNC.addObserver(self, selector: #selector(handleScreensDidWake), name: NSWorkspace.sessionDidBecomeActiveNotification, object: nil)
+
         // Hook kiểm thử: giả lập popover mở/đóng mà không cần bấm menu bar.
         let env = ProcessInfo.processInfo.environment
         if env["HYPERMAC_DISKSPEED_AUTOSTART"] == "1" {
@@ -113,6 +120,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         FanManager.shared.restoreSystemSync()
         // Phục hồi sạc bình thường của macOS khi thoát app để tránh kẹt ngắt sạc phần cứng SMC
         BatteryManager.shared.setChargingInhibited(false)
+    }
+
+    @objc private func handleScreensDidSleep(_ notification: Notification) {
+        ClipboardManager.shared.setSystemSleepState(true)
+        PermissionsManager.shared.setSystemSleepState(true)
+        FanManager.shared.setSystemSleepState(true)
+        ThermalManager.shared.setSystemSleepState(true)
+    }
+
+    @objc private func handleScreensDidWake(_ notification: Notification) {
+        ClipboardManager.shared.setSystemSleepState(false)
+        PermissionsManager.shared.setSystemSleepState(false)
+        FanManager.shared.setSystemSleepState(false)
+        ThermalManager.shared.setSystemSleepState(false)
     }
 
     /// Cửa sổ xem trước UI khi đặt `HYPERMAC_PREVIEW=1` (dùng để chụp/kiểm tra layout).

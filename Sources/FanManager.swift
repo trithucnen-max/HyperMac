@@ -15,10 +15,10 @@ public final class FanManager: ObservableObject {
         case manual
     }
 
-    private static let requiredHelperVersion = 2
-    private static let helperPath = "/usr/local/bin/displaycontrol-power"
-    private static let safetyTempOn = 90.0
-    private static let safetyTempOff = 80.0
+    private nonisolated static let requiredHelperVersion = 2
+    private nonisolated static let helperPath = "/usr/local/bin/displaycontrol-power"
+    private nonisolated static let safetyTempOn = 90.0
+    private nonisolated static let safetyTempOff = 80.0
 
     @Published public private(set) var fanCount: Int = 0
     @Published public private(set) var minRPM: Double = 0
@@ -41,6 +41,8 @@ public final class FanManager: ObservableObject {
     private var pollTimer: Timer?
     private var smcPath: String?
     private var pendingApply: DispatchWorkItem?
+    private var crashWatchdogProcess: Process?
+    private var isScreenAsleep: Bool = false
 
     private init() {
         smcPath = FanManager.locateSMC()
@@ -76,10 +78,16 @@ public final class FanManager: ObservableObject {
 
     public func selectSystem() {
         pendingApply?.cancel()
+        stopClientCrashWatchdog()
         mode = .system
         targetRPM = 0
         errorMessage = nil
         runHelper(["fan-auto", "0"]) { _ in }
+        if isScreenAsleep {
+            pollTimer?.invalidate()
+            pollTimer = nil
+            ThermalManager.shared.setSystemSleepState(true)
+        }
     }
 
     public func selectMedium() { apply(rpm: mediumRPM, as: .medium) }
@@ -107,10 +115,27 @@ public final class FanManager: ObservableObject {
 
     /// Gọi khi thoát app (đồng bộ).
     public func restoreSystemSync() {
+        stopClientCrashWatchdog()
         guard isAvailable else { return }
         _ = shell("sudo -n \(FanManager.helperPath) fan-auto 0 2>/dev/null")
         mode = .system
         targetRPM = 0
+    }
+
+    /// Tạm dừng hoặc tiếp tục quét RPM khi màn hình tắt/bật (vẫn giữ quét nếu đang chạy quạt Manual để bảo vệ ngưỡng 90°C).
+    public func setSystemSleepState(_ asleep: Bool) {
+        isScreenAsleep = asleep
+        if asleep {
+            if mode == .system {
+                pollTimer?.invalidate()
+                pollTimer = nil
+            }
+        } else {
+            refreshRPM()
+            if pollTimer == nil {
+                startPolling()
+            }
+        }
     }
 
     // MARK: - Internals
@@ -133,22 +158,57 @@ public final class FanManager: ObservableObject {
         targetRPM = rpm
         errorMessage = nil
         isBusy = true
+        // Đảm bảo bộ đếm nhiệt & quạt luôn chạy khi ở chế độ Manual để cầu chì 90°C hoạt động
+        if pollTimer == nil { startPolling() }
+        ThermalManager.shared.ensurePollingForManualFan()
         let value = Int(rpm.rounded())
-        runHelper(["fan-set", "0", "\(value)"]) { [weak self] ok in
+        let hexValue = FanManager.rpmToFloat32LEHex(value)
+        let pidStr = "\(ProcessInfo.processInfo.processIdentifier)"
+        // Tương thích ngược: truyền thêm hexValue ($4) và pid ($5). Helper v2 cũ sẽ bỏ qua $4/$5, helper mới dùng trực tiếp.
+        runHelper(["fan-set", "0", "\(value)", hexValue, pidStr]) { [weak self] ok in
             guard let self = self else { return }
             self.isBusy = false
             if !ok {
+                self.stopClientCrashWatchdog()
                 self.mode = .system
                 self.targetRPM = 0
                 self.errorMessage = tr("Không đặt được tốc độ quạt trên máy này.",
                                        "Could not set fan speed on this Mac.")
                 return
             }
+            self.startClientCrashWatchdogIfNeeded()
             // Ghi SMC có độ trễ: đọc lại sau ~1.5s rồi kiểm chứng.
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
                 self?.verifyTarget(expected: Double(value))
             }
         }
+    }
+
+    /// Watchdog phía client: tự trả quạt về Auto nếu tiến trình HyperMac bị Force Quit (kill -9), tương thích ngược với cả helper v2 cũ.
+    private func startClientCrashWatchdogIfNeeded() {
+        guard crashWatchdogProcess == nil || !(crashWatchdogProcess?.isRunning ?? false) else { return }
+        let appPID = ProcessInfo.processInfo.processIdentifier
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: "/bin/sh")
+        proc.arguments = [
+            "-c",
+            "while kill -0 \(appPID) 2>/dev/null; do sleep 3; done; sudo -n \(FanManager.helperPath) fan-auto 0 >/dev/null 2>&1"
+        ]
+        proc.standardOutput = FileHandle.nullDevice
+        proc.standardError = FileHandle.nullDevice
+        do {
+            try proc.run()
+            crashWatchdogProcess = proc
+        } catch {
+            appLog("⚠️ Could not start fan crash watchdog: \(error)")
+        }
+    }
+
+    private func stopClientCrashWatchdog() {
+        if let proc = crashWatchdogProcess, proc.isRunning {
+            proc.terminate()
+        }
+        crashWatchdogProcess = nil
     }
 
     private func verifyTarget(expected: Double) {
@@ -244,12 +304,23 @@ public final class FanManager: ObservableObject {
     // MARK: - Helpers
 
     private static func locateSMC() -> String? {
+        let execDir = URL(fileURLWithPath: CommandLine.arguments[0]).deletingLastPathComponent().path
         let candidates = [
             Bundle.main.path(forResource: "smc", ofType: nil),
             "/usr/local/bin/displaycontrol-smc",
-            FileManager.default.currentDirectoryPath + "/Resources/smc"
+            FileManager.default.currentDirectoryPath + "/Resources/smc",
+            execDir + "/Resources/smc",
+            execDir + "/../Resources/smc"
         ].compactMap { $0 }
         return candidates.first { FileManager.default.isExecutableFile(atPath: $0) }
+    }
+
+    /// Chuyển đổi số nguyên RPM sang chuỗi hex IEEE-754 float32 little-endian (ví dụ: 3000 -> "00803b45") thuần Swift.
+    public nonisolated static func rpmToFloat32LEHex(_ rpm: Int) -> String {
+        let bits = Float(rpm).bitPattern.littleEndian
+        return withUnsafeBytes(of: bits) { bytes in
+            bytes.map { String(format: "%02x", $0) }.joined()
+        }
     }
 
     /// Phân tích dòng `  F0Ac  [flt ]  2985 (bytes ...)` hoặc `[ui8 ]  1 (...)` → số.

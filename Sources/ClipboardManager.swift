@@ -278,6 +278,15 @@ public class ClipboardManager: ObservableObject {
 
     // MARK: - Monitoring Engine
 
+    public func setSystemSleepState(_ asleep: Bool) {
+        if asleep {
+            stopMonitoring()
+        } else if isMonitoringEnabled {
+            self.lastChangeCount = NSPasteboard.general.changeCount
+            startMonitoring()
+        }
+    }
+
     public func startMonitoring() {
         pollTimer?.invalidate()
         pollTimer = Timer.scheduledTimer(withTimeInterval: 0.35, repeats: true) { [weak self] _ in

@@ -126,11 +126,12 @@ public final class ActivationManager: ObservableObject {
            let img = NSImage(contentsOfFile: path) {
             return img
         }
+        let execDir = URL(fileURLWithPath: CommandLine.arguments[0]).deletingLastPathComponent().path
         let fallbackPaths = [
             "/Applications/HyperMac.app/Contents/Resources/zalo_group_qr.jpg",
             FileManager.default.currentDirectoryPath + "/Resources/zalo_group_qr.jpg",
-            "/Users/khacdai24/.gemini/antigravity-ide/scratch/DisplayControl/Resources/zalo_group_qr.jpg",
-            "/Users/khacdai24/.gemini/antigravity/brain/94879281-6fae-438e-aee5-006283e6be3d/.user_uploaded/media_1793958997790_99220db5.jpg"
+            execDir + "/Resources/zalo_group_qr.jpg",
+            execDir + "/../Resources/zalo_group_qr.jpg"
         ]
         for p in fallbackPaths {
             if FileManager.default.fileExists(atPath: p), let img = NSImage(contentsOfFile: p) {

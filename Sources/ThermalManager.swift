@@ -221,6 +221,28 @@ public class ThermalManager: ObservableObject {
 
     // MARK: - Polling & Refresh Metrics
 
+    public func setSystemSleepState(_ asleep: Bool) {
+        if asleep {
+            // Nếu quạt đang ở chế độ điều khiển thủ công (Medium/High/Manual), vẫn giữ cảm biến nhiệt để cầu chì 90°C hoạt động
+            if FanManager.shared.mode == .system {
+                pollTimer?.invalidate()
+                pollTimer = nil
+            }
+        } else {
+            refreshMetrics()
+            if pollTimer == nil {
+                startPolling()
+            }
+        }
+    }
+
+    public func ensurePollingForManualFan() {
+        if pollTimer == nil {
+            refreshMetrics()
+            startPolling()
+        }
+    }
+
     private func startPolling() {
         pollTimer?.invalidate()
         pollTimer = Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [weak self] _ in
