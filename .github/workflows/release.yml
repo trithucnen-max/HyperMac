@@ -1,0 +1,169 @@
+name: Build & Release HyperMac
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name (e.g. v1.4.7)'
+        required: true
+        default: 'v1.4.7'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Release (Apple Silicon)
+    runs-on: macos-15
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Make Build Script Executable
+        run: chmod +x build.sh
+
+      # Ký bằng cùng chứng chỉ self-signed với bản local để Designated Requirement
+      # (identifier + certificate root) không đổi giữa các phiên bản → TCC giữ quyền.
+      # Nếu chưa cấu hình secret, fallback ad-hoc (quyền Accessibility sẽ mất sau update).
+      - name: Import Code Signing Certificate
+        id: signing
+        env:
+          SIGNING_P12_BASE64: ${{ secrets.HYPERMAC_SIGNING_P12_BASE64 }}
+          SIGNING_P12_PASSWORD: ${{ secrets.HYPERMAC_SIGNING_P12_PASSWORD }}
+        run: |
+          set -uo pipefail
+          KEYCHAIN_PATH="$RUNNER_TEMP/hypermac-signing.keychain-db"
+
+          fail() {
+            echo "::error title=Signing certificate import failed::$1"
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          }
+
+          if [ -z "${SIGNING_P12_BASE64}" ]; then
+            echo "::warning::Chưa có secret HYPERMAC_SIGNING_P12_BASE64 — build sẽ ký ad-hoc."
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "${SIGNING_P12_PASSWORD}" ]; then
+            fail "Thiếu secret HYPERMAC_SIGNING_P12_PASSWORD."
+          fi
+
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 16)"
+          if ! security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"; then
+            fail "Không tạo được keychain tạm."
+          fi
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" \
+            || fail "Không unlock được keychain tạm."
+
+          # BSD base64 trên runner macOS chỉ có -D; secret có thể lẫn xuống dòng/CRLF.
+          CLEAN_B64="$(printf '%s' "$SIGNING_P12_BASE64" | tr -d '[:space:]')"
+          echo "base64 sạch: ${#CLEAN_B64} ký tự"
+          DECODE_ERR="$RUNNER_TEMP/decode.err"
+          if ! printf '%s' "$CLEAN_B64" | python3 -c "import base64,sys;raw=''.join(sys.stdin.read().split());sys.stdout.buffer.write(base64.b64decode(raw,validate=True))" > "$RUNNER_TEMP/cert.p12" 2>"$DECODE_ERR"; then
+            echo "python decode: $(tail -2 "$DECODE_ERR" | tr '\n' ' ')"
+            if ! printf '%s' "$CLEAN_B64" | openssl base64 -d -A > "$RUNNER_TEMP/cert.p12" 2>>"$DECODE_ERR"; then
+              fail "Secret base64 không giải mã được: $(tail -3 "$DECODE_ERR" | tr '\n' ' ')"
+            fi
+          fi
+          echo "p12 size: $(wc -c < "$RUNNER_TEMP/cert.p12" | tr -d ' ') bytes"
+          # Nếu nội dung không phải DER (0x30) thì có thể secret bị base64 2 lớp.
+          ensure_der() {
+            local f="$1" i
+            for i in 1 2; do
+              [ "$(head -c 1 "$f" | od -An -tx1 | tr -d ' \n')" = "30" ] && return 0
+              python3 -c "import base64,sys;p=sys.argv[1];raw=''.join(open(p,'r',errors='ignore').read().split());open(p,'wb').write(base64.b64decode(raw,validate=True))" "$f" 2>/dev/null || return 1
+            done
+            [ "$(head -c 1 "$f" | od -An -tx1 | tr -d ' \n')" = "30" ]
+          }
+
+          ensure_der "$RUNNER_TEMP/cert.p12" || fail "Secret không phải p12 DER và cũng không decode thêm được (size $(wc -c < "$RUNNER_TEMP/cert.p12" | tr -d ' ') bytes)."
+          if ! P12_INFO="$(openssl pkcs12 -in "$RUNNER_TEMP/cert.p12" -noout -passin "pass:${SIGNING_P12_PASSWORD}" 2>&1)"; then
+            fail "Không đọc được p12 (size $(wc -c < "$RUNNER_TEMP/cert.p12" | tr -d ' ') bytes, sha256 $(shasum -a 256 "$RUNNER_TEMP/cert.p12" | cut -d' ' -f1)): $(echo "$P12_INFO" | tail -2 | tr '\n' ' ')"
+          fi
+
+          if ! IMPORT_OUT="$(security import "$RUNNER_TEMP/cert.p12" \
+                -P "$SIGNING_P12_PASSWORD" \
+                -A -t cert -f pkcs12 \
+                -k "$KEYCHAIN_PATH" 2>&1)"; then
+            fail "security import thất bại: $(echo "$IMPORT_OUT" | tail -3 | tr '\n' ' ')"
+          fi
+          echo "$IMPORT_OUT"
+
+          if ! PART_OUT="$(security set-key-partition-list \
+                -S apple-tool:,apple:,codesign: \
+                -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" 2>&1)"; then
+            fail "set-key-partition-list thất bại: $(echo "$PART_OUT" | tail -3 | tr '\n' ' ')"
+          fi
+          rm -f "$RUNNER_TEMP/cert.p12"
+
+          # codesign chỉ tìm identity trong các keychain thuộc search list.
+          # Runner là máy dùng một lần nên không cần khôi phục lại danh sách.
+          ORIGINAL_KEYCHAINS=()
+          while IFS= read -r kc; do
+            [ -n "$kc" ] && ORIGINAL_KEYCHAINS+=("$kc")
+          done < <(security list-keychains -d user | sed 's/^[[:space:]]*//; s/"//g')
+          if ! security list-keychains -d user -s "$KEYCHAIN_PATH" "${ORIGINAL_KEYCHAINS[@]}"; then
+            fail "Không thêm được keychain tạm vào search list."
+          fi
+          echo "Keychains: $(security list-keychains -d user | tr -d '\n')"
+
+          # -v chỉ liệt kê identity đã trust; cert tự ký trên runner là untrusted
+          # nhưng codesign vẫn dùng được, nên phải bỏ -v.
+          IDENTITIES="$(security find-identity -p codesigning "$KEYCHAIN_PATH" 2>&1)"
+          echo "$IDENTITIES"
+          case "$IDENTITIES" in
+            *"HyperMac Self-Signed"*)
+              echo "✅ Đã import chứng chỉ HyperMac Self-Signed"
+              echo "signed=true" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              fail "Đã import nhưng không thấy identity 'HyperMac Self-Signed'. Output: $(echo "$IDENTITIES" | tr '\n' ' ')"
+              ;;
+          esac
+
+      - name: Compile and Package HyperMac Bundle
+        run: ./build.sh --no-run
+        env:
+          CI: true
+          HYPERMAC_SIGN_IDENTITY: HyperMac Self-Signed
+          HYPERMAC_SIGN_KEYCHAIN: ${{ runner.temp }}/hypermac-signing.keychain-db
+
+      - name: Verify Code Signature
+        if: steps.signing.outputs.signed == 'true'
+        run: |
+          codesign --verify --deep --strict build/HyperMac.app
+          codesign -dv --verbose=4 build/HyperMac.app 2>&1 | grep -F "Authority=HyperMac Self-Signed"
+          codesign -d -r- build/HyperMac.app 2>&1 | tail -1
+
+      - name: Determine Release Tag and Notes
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+          python3 -c "import json; data = json.load(open('version.json')); print(data.get('notes', ''))" > release_notes.md 2>/dev/null || true
+
+      - name: Create GitHub Release and Upload Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: HyperMac ${{ steps.vars.outputs.tag }}
+          body_path: release_notes.md
+          files: build/HyperMac.zip
+          draft: false
+          # Tag có hậu tố (v1.6.0-rc1, v1.6.0-test) → release nháp thử nghiệm,
+          # không bị UpdateManager coi là bản chính thức.
+          prerelease: ${{ contains(steps.vars.outputs.tag, '-') }}
+          generate_release_notes: true
+
+      - name: Cleanup Signing Keychain
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/hypermac-signing.keychain-db" 2>/dev/null || true

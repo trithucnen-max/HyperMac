@@ -1,0 +1,7 @@
+{
+  "version": "1.9.4",
+  "name": "HyperMac v1.9.4 (Khắc phục Memory Leak CGEvent & Tối ưu RAM lâu dài)",
+  "notes": "✨ Bản vá & Tối ưu hoá trong phiên bản v1.9.4:\n- 🧠 Khắc phục triệt để lỗi Memory Leak CGEvent (PR #3 từ contributor thaupc): Sửa lỗi retain không giải phóng trong Event Tap Callback của hệ thống khi lắng nghe phím tắt. Đổi toàn bộ sang Unmanaged.passUnretained(event), giúp giải phóng ngay lập tức các sự kiện bàn phím/chuột.\n- 🚀 Tối ưu hoá bộ nhớ dài hạn: Giữ mức tiêu hao RAM siêu nhẹ ổn định (~10–40MB) kể cả khi mở máy chạy liên tục nhiều tuần mà không bị phình bộ nhớ.\n- 🗄️ Kế thừa đầy đủ các nâng cấp Menu Bar Drawer và Notch Spacing Fix từ v1.9.3.",
+  "download_url": "https://github.com/mrgoose000000-gif/HyperMac/releases/download/v1.9.4/HyperMac.zip",
+  "html_url": "https://github.com/mrgoose000000-gif/HyperMac/releases/tag/v1.9.4"
+}
