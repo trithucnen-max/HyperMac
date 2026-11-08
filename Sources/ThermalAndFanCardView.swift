@@ -315,3 +315,4 @@ struct ThermalAndFanCardView: View {
         Color.accentColor.opacity(0.12)
     }
 }
+

@@ -605,3 +605,4 @@ struct EmptyStateView: View {
         .padding(.vertical, 20)
     }
 }
+

@@ -12,7 +12,7 @@ Although HyperMac is a single-process macOS application without a traditional RE
 | **2. Accessibility IPC** | Target macOS Apps (`Finder`, `Chrome`, etc.) & `SystemUIServer` | `AXUIElement` Mach IPC + `_AXUIElementGetWindow` | [`WindowManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/WindowManager.swift), [`WindowSnapManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/WindowSnapManager.swift), [`MenuBarHiderManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/MenuBarHiderManager.swift) |
 | **3. Root Helper CLI Protocol** | `/usr/local/bin/displaycontrol-power` & `displaycontrol-smc` | `Process` (`/usr/bin/sudo -n`) via `ShellHelper.runCommand` | [`BatteryManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/BatteryManager.swift), [`FanManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/FanManager.swift), [`Resources/displaycontrol-power`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Resources/displaycontrol-power) |
 | **4. Dynamic Private Framework XPC** | `powerd`, `WindowServer`, `bluetoothd` | `dlopen` / `dlsym` Objective-C & C symbols | [`BatteryManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/BatteryManager.swift), [`DisplayManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/DisplayManager.swift), [`BluetoothManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/BluetoothManager.swift), [`IOKitBridge.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/IOKitBridge.swift) |
-| **5. AppleScript & OS Process Bridges** | `Finder.app`, `SecurityAgent`, `GitHub API`, `Activation API` | `NSAppleScript`, `/usr/bin/osascript`, `URLSession` | [`SystemCleanerManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/SystemCleanerManager.swift), [`UpdateManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/UpdateManager.swift), [`ActivationManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/ActivationManager.swift) |
+| **5. AppleScript & OS Process Bridges** | `Finder.app`, `SecurityAgent`, `GitHub API` | `NSAppleScript`, `/usr/bin/osascript`, `URLSession` | [`SystemCleanerManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/SystemCleanerManager.swift), [`UpdateManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/UpdateManager.swift) |
 
 ---
 
@@ -60,10 +60,10 @@ HyperMac interacts with external application processes via `AXUIElementCreateApp
 
 ## 4. External HTTP Endpoints
 
-HyperMac makes outbound HTTPS requests in only two managers:
+HyperMac makes outbound HTTPS requests only for application update checks:
 
 | Manager | Endpoint | Method | Payload / Response |
 | :--- | :--- | :--- | :--- |
 | [`UpdateManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/UpdateManager.swift) | `https://raw.githubusercontent.com/khacdaikon/HyperMac/main/version.json` | `GET` | JSON `{ "version": "1.9.4", "download_url": "...", "release_notes": "...", "sha256": "..." }` |
-| [`ActivationManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/ActivationManager.swift) | `https://hypermac-License-Key.daivan280997.workers.dev/activate` | `POST` | Request: `{ "key": "<userKey>", "hardware_id": "<IOPlatformUUID>" }` (15s timeout). Note: `isActivated` currently defaults to `true` for open-source distribution. |
+
 

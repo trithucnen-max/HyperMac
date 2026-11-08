@@ -78,18 +78,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         _ = FanManager.shared
         _ = ScreenshotManager.shared
         _ = MenuBarHiderManager.shared
-        _ = ActivationManager.shared
 
-        // Tự động mở bảng kích hoạt nếu đây là lần đầu người dùng khởi động ứng dụng
-        if !ActivationManager.shared.isActivated {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
-                guard let self = self, let button = self.statusItem?.button else { return }
-                if !self.popover.isShown {
-                    self.popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-                    self.popover.contentViewController?.view.window?.makeKey()
-                    NSApp.activate(ignoringOtherApps: true)
-                }
-            }
+        // Silent cleanup: loại bỏ triệt để file kích hoạt/marker cũ nếu có trên máy
+        let homeMarker = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".hypermac_activated")
+        try? FileManager.default.removeItem(at: homeMarker)
+        if let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
+            try? FileManager.default.removeItem(at: appSupport.appendingPathComponent("HyperMac/.license_v1"))
         }
 
         // Register for display reconfiguration
@@ -174,9 +168,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             UpdateManager.shared.showDonateModal = true
         }
 
-        if ProcessInfo.processInfo.environment["HYPERMAC_PREVIEW_ACTIVATION"] == "1" {
-            ActivationManager.shared.isActivated = false
-        }
 
         let waitSec = Double(ProcessInfo.processInfo.environment["HYPERMAC_PREVIEW_WAIT"] ?? "") ?? 0.25
 

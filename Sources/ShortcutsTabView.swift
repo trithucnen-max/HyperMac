@@ -665,3 +665,4 @@ struct ShortcutsTabView: View {
         .frame(maxWidth: .infinity)
     }
 }
+

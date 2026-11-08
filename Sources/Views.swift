@@ -20,7 +20,6 @@ public struct MainView: View {
     @ObservedObject var permissionsManager: PermissionsManager = PermissionsManager.shared
     @ObservedObject var languageManager: LanguageManager = LanguageManager.shared
     @ObservedObject var screenshotManager: ScreenshotManager = ScreenshotManager.shared
-    @ObservedObject var activationManager: ActivationManager = ActivationManager.shared
 
     public init(displayManager: DisplayManager) {
         self.displayManager = displayManager
@@ -103,14 +102,8 @@ public struct MainView: View {
                 DonateModalView(updateManager: updateManager)
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
             }
-
-            // Community Activation Modal Overlay (First launch required gate)
-            if !activationManager.isActivated {
-                ActivationModalView(activationManager: activationManager)
-                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
-            }
         }
-        .animation(.spring(response: 0.25, dampingFraction: 0.8), value: updateManager.showUpdateModal || updateManager.showDonateModal || !activationManager.isActivated)
+        .animation(.spring(response: 0.25, dampingFraction: 0.8), value: updateManager.showUpdateModal || updateManager.showDonateModal)
         .frame(width: 380, height: 570)
         .alert(isPresented: Binding<Bool>(
             get: { displayManager.showAlert },

@@ -32,7 +32,7 @@ flowchart TD
 1. **[`Views.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/Views.swift) (438 lines — Root Container, Header, TabBar & Footer)**
    - Hosts `MainView` (the 4-tab container `selectedMainTab: 0..3`), `ModernHeaderBar`, `TopTabBar`, and `FooterView`.
 2. **[`ModalsView.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/ModalsView.swift) (672 lines — Overlay Modals)**
-   - Hosts `UpdateModalView`, `DonateModalView`, and `ActivationModalView`.
+   - Hosts `UpdateModalView` and `DonateModalView`.
 3. **[`DisplaysTabView.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/DisplaysTabView.swift) (607 lines — Tab 0: Displays)**
    - Per-display cards (`DisplayCardView`) with interactive brightness sliders (`0%–100%`), `25%/50%/75%/100%` presets, soft-disconnect toggles, `VirtualDisplayCardView` (HiDPI dummy display + Primary Screen Blackout), `CaffeinateCardView`, `MenuBarHiderCardView`, and `QuickActionsBar`.
 3. **[`HardwareCareTabView.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/HardwareCareTabView.swift) (~938 lines — Tab 1: Hardware & Battery)**

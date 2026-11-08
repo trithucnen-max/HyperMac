@@ -22,7 +22,7 @@ flowchart TD
         DispMgr["DisplayManager & VirtualDisplayManager"]
         HwMgr["BatteryManager | ThermalManager | FanManager"]
         SysMgr["DiskSpeedManager | ProcessEnergyManager | SystemCleanerManager"]
-        InfraMgr["PermissionsManager | UpdateManager | ActivationManager | LanguageManager"]
+        InfraMgr["PermissionsManager | UpdateManager | LanguageManager"]
     end
 
     subgraph Bridges["Native & Private System Bridges"]

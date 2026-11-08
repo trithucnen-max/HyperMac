@@ -940,3 +940,4 @@ struct BatteryCardView: View {
         }
     }
 }
+
