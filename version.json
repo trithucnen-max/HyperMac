@@ -1,7 +1,7 @@
 {
-  "version": "1.9.4",
-  "name": "HyperMac v1.9.4 (Khắc phục Memory Leak CGEvent & Tối ưu RAM lâu dài)",
-  "notes": "✨ Bản vá & Tối ưu hoá trong phiên bản v1.9.4:\n- 🧠 Khắc phục triệt để lỗi Memory Leak CGEvent (PR #3 từ contributor thaupc): Sửa lỗi retain không giải phóng trong Event Tap Callback của hệ thống khi lắng nghe phím tắt. Đổi toàn bộ sang Unmanaged.passUnretained(event), giúp giải phóng ngay lập tức các sự kiện bàn phím/chuột.\n- 🚀 Tối ưu hoá bộ nhớ dài hạn: Giữ mức tiêu hao RAM siêu nhẹ ổn định (~10–40MB) kể cả khi mở máy chạy liên tục nhiều tuần mà không bị phình bộ nhớ.\n- 🗄️ Kế thừa đầy đủ các nâng cấp Menu Bar Drawer và Notch Spacing Fix từ v1.9.3.",
-  "download_url": "https://github.com/mrgoose000000-gif/HyperMac/releases/download/v1.9.4/HyperMac.zip",
-  "html_url": "https://github.com/mrgoose000000-gif/HyperMac/releases/tag/v1.9.4"
+  "version": "2.0",
+  "name": "HyperMac v2.0 (Kiến trúc Modular UI, Zero-Polling, Tự do Hoá Bản quyền & Chứng chỉ BasanCorp)",
+  "notes": "✨ Các nâng cấp đột phá trong phiên bản v2.0:\n- 🚀 Tái cấu trúc kiến trúc Modular UI: Giảm 88% dung lượng file Views.swift, phân tách thành 6 module giao diện độc lập tối ưu hiệu năng render.\n- 🛡️ Hiện đại hoá điều khiển quạt SMC: Viết lại thuật toán Float32 LE Hex bằng Swift thuần, loại bỏ hoàn toàn perl/python3, bổ sung Dual PID Crash Watchdog tự phục hồi quạt an toàn.\n- ⚡ Adaptive Zero-Polling: Tự động ngắt 100% các vòng lặp quét định kỳ khi màn hình tắt hoặc khoá phiên, tiết kiệm pin tối đa.\n- 🔓 Tự do hoá bản quyền 100%: Xoá bỏ hoàn toàn cơ chế mã kích hoạt, Zalo QR modal và Cloudflare API, mở HyperMac lập tức không rào cản.\n- 🔏 Ký số chính thức: Chứng chỉ Developer ID Application từ BASAN CORPORATION (JFT5TLZ3HK), đảm bảo độ tin cậy và giữ nguyên quyền Accessibility/Screen Recording bền vững.",
+  "download_url": "https://github.com/mrgoose000000-gif/HyperMac/releases/download/v2.0/HyperMac.zip",
+  "html_url": "https://github.com/mrgoose000000-gif/HyperMac/releases/tag/v2.0"
 }

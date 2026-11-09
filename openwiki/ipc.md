@@ -64,6 +64,6 @@ HyperMac makes outbound HTTPS requests only for application update checks:
 
 | Manager | Endpoint | Method | Payload / Response |
 | :--- | :--- | :--- | :--- |
-| [`UpdateManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/UpdateManager.swift) | `https://raw.githubusercontent.com/khacdaikon/HyperMac/main/version.json` | `GET` | JSON `{ "version": "1.9.4", "download_url": "...", "release_notes": "...", "sha256": "..." }` |
+| [`UpdateManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/UpdateManager.swift) | `https://raw.githubusercontent.com/khacdaikon/HyperMac/main/version.json` | `GET` | JSON `{ "version": "2.0", "download_url": "...", "release_notes": "...", "sha256": "..." }` |
 
 

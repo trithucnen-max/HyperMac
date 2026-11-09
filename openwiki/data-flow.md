@@ -118,7 +118,7 @@ flowchart LR
 
 [`UpdateManager.swift`](file:///Users/kimtrungduong/Downloads/HyperMac-main/Sources/UpdateManager.swift) performs safe self-updating without breaking TCC permissions or leaving partial bundles:
 
-1. **Check**: Fetches `https://raw.githubusercontent.com/khacdaikon/HyperMac/main/version.json` every 4 hours (`URLSession` ephemeral config bypassing cache) and compares semantic version arrays against `UpdateManager.currentAppVersion` (`1.9.4`).
+1. **Check**: Fetches `https://raw.githubusercontent.com/khacdaikon/HyperMac/main/version.json` every 4 hours (`URLSession` ephemeral config bypassing cache) and compares semantic version arrays against `UpdateManager.currentAppVersion` (`2.0`).
 2. **Download**: Streams `HyperMac.zip` via `URLSessionDownloadDelegate`, publishing byte progress to the UI.
 3. **Verify & Stage**:
    - Computes SHA-256 via `/usr/bin/shasum -a 256` against `version.json`'s `sha256` field (if present).

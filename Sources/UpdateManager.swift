@@ -67,7 +67,7 @@ struct VersionManifest: Decodable {
 public class UpdateManager: NSObject, ObservableObject, URLSessionDownloadDelegate {
     public static let shared = UpdateManager()
 
-    public static let currentVersion: String = "1.9.4"
+    public static let currentVersion: String = "2.0"
 
     @Published public var state: UpdateState = .idle
     @Published public var downloadProgress: Double = 0.0

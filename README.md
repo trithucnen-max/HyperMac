@@ -1,13 +1,14 @@
 # ⚡ HyperMac — Siêu Tiện Ích Tất-Cả-Trong-Một Cho Mac (Apple Silicon)
 
-[![Version](https://img.shields.io/badge/version-v1.9.4-blue.svg)](https://github.com/mrgoose000000-gif/HyperMac/releases/latest)
+[![Version](https://img.shields.io/badge/version-v2.0-blue.svg)](https://github.com/mrgoose000000-gif/HyperMac/releases/latest)
 [![Platform](https://img.shields.io/badge/platform-macOS%2014.0%2B-black.svg)](https://github.com/mrgoose000000-gif/HyperMac)
 [![Architecture](https://img.shields.io/badge/architecture-Apple%20Silicon%20(arm64)-brightgreen.svg)](https://github.com/mrgoose000000-gif/HyperMac)
-[![Memory Footprint](https://img.shields.io/badge/RAM-~45MB-success.svg)](https://github.com/mrgoose000000-gif/HyperMac)
+[![Memory Footprint](https://img.shields.io/badge/RAM-~40MB-success.svg)](https://github.com/mrgoose000000-gif/HyperMac)
 [![License](https://img.shields.io/badge/license-MIT-purple.svg)](LICENSE)
+[![Signed](https://img.shields.io/badge/Codesign-BasanCorp_Developer_ID-success.svg)](https://github.com/mrgoose000000-gif/HyperMac)
 [![Donate](https://img.shields.io/badge/❤️_Donate-Ủng_hộ-ff69b4.svg)](#-ủng-hộ-phát-triển-donate)
 
-> 🚀 **HyperMac** là bộ công cụ tối thượng viết bằng **Swift thuần** dành riêng cho máy Mac chạy chip **Apple Silicon (M1, M2, M3, M4...)**. Ứng dụng gom trọn tính năng của **9 ứng dụng rời rạc** vào một icon duy nhất trên thanh Menu Bar với mức tiêu hao RAM siêu nhẹ **chỉ ~45MB**:
+> 🚀 **HyperMac** là bộ công cụ tối thượng viết bằng **Swift thuần** dành riêng cho máy Mac chạy chip **Apple Silicon (M1, M2, M3, M4...)**. Ứng dụng gom trọn tính năng của **9 ứng dụng rời rạc** vào một icon duy nhất trên thanh Menu Bar với mức tiêu hao RAM siêu nhẹ **chỉ ~40MB**:
 > 
 > **Bartender & Hidden Bar** (Gom gọn thanh Menu Bar) + **CleanMyMac & AppCleaner** (Dọn rác hệ thống & Gỡ app tận gốc) + **Rectangle** (Chia cửa sổ) + **AltTab** (Chuyển cửa sổ đa hàng) + **Finder Cut & Paste** (Cắt & Dán tệp Windows-style) + **Maccy** (Lịch sử Clipboard) + **AlDente Pro** (Khóa sạc 80% SMC) + **BetterDisplay** (Chỉnh sáng màn ngoài F1/F2) + **Nhiệt độ & Cảm biến** (Đo nhiệt độ 30+ cảm biến HID/PMU) + **Đo tốc độ chép file** (ổ vật lý & NAS qua LAN).
 
@@ -18,7 +19,7 @@
 ### ⬇️ Bước 1: Tải bộ cài dựng sẵn
 Bấm vào nút bên dưới để tải về phiên bản mới nhất:
 
-[![Download HyperMac](https://img.shields.io/badge/📥_TẢI_VỀ-HyperMac.zip_(v1.9.4)-2563EB?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/mrgoose000000-gif/HyperMac/releases/latest/download/HyperMac.zip)
+[![Download HyperMac](https://img.shields.io/badge/📥_TẢI_VỀ-HyperMac.zip_(v2.0)-2563EB?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/mrgoose000000-gif/HyperMac/releases/latest/download/HyperMac.zip)
 
 *(Hoặc vào trang [GitHub Releases](https://github.com/mrgoose000000-gif/HyperMac/releases) để xem danh sách tất cả các bản phát hành).*
 
@@ -221,6 +222,13 @@ chmod +x build.sh
 ---
 
 ## 📝 Nhật Ký Phiên Bản (Changelog)
+
+### [v2.0] — 2026-11-09
+- **🚀 Tái cấu trúc kiến trúc Modular UI:** Giảm 88% dung lượng file `Views.swift` (từ 3.630 dòng xuống 438 dòng), phân tách thành 6 module view chuyên biệt giúp giao diện render siêu tốc và dễ bảo trì.
+- **🛡️ Hiện đại hoá điều khiển quạt SMC:** Viết lại thuật toán Float32 LE Hex bằng Swift thuần, loại bỏ hoàn toàn perl/python3, bổ sung **Dual PID Crash Watchdog** tự động phục hồi tốc độ quạt Auto nếu app bị tắt đột ngột, tương thích ngược 100% với Root Helper v2.
+- **⚡ Adaptive Zero-Polling:** Tạm dừng 100% các bộ đếm quét khi màn hình ngủ hoặc khoá phiên (`screensDidSleepNotification` / `sessionDidResignActiveNotification`), triệt tiêu hoàn toàn hiện tượng hao pin ngầm.
+- **🔓 Tự do hoá 100% (Clean Cut):** Xoá bỏ hoàn toàn cơ chế mã kích hoạt bản quyền, modal QR Zalo và API Cloudflare Worker. HyperMac mở tức thì không rào cản.
+- **🔏 Ký số chính thức bởi BASAN CORPORATION:** Đóng gói và ký số bằng chứng chỉ `Developer ID Application: BASAN CORPORATION (JFT5TLZ3HK)`, giữ nguyên vẹn quyền Accessibility và Screen Recording bền vững trên macOS.
 
 ### [v1.9.4] — 2026-11-08
 - **🧠 Khắc phục triệt để lỗi Memory Leak CGEvent (PR #3 từ contributor thaupc):** Sửa lỗi retain không giải phóng trong Event Tap Callback của hệ thống khi lắng nghe phím tắt. Đổi toàn bộ sang `Unmanaged.passUnretained(event)`, giúp giải phóng ngay lập tức các sự kiện bàn phím/chuột.

@@ -98,9 +98,9 @@ cat > "${CONTENTS}/Info.plist" << 'PLIST'
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleVersion</key>
-    <string>1.9.4</string>
+    <string>2.0</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.9.4</string>
+    <string>2.0</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>
@@ -122,24 +122,35 @@ cat > "${CONTENTS}/Info.plist" << 'PLIST'
 PLIST
 
 # ── Step 3: Code sign ──
-# Dùng chứng chỉ self-signed cố định nếu có (scripts/setup-signing-identity.sh).
-# Ký ad-hoc tạo cdhash mới mỗi lần build → macOS thu hồi quyền Accessibility
-# sau mỗi lần rebuild. Identity cố định giữ nguyên Designated Requirement.
-SIGN_IDENTITY="${HYPERMAC_SIGN_IDENTITY:-HyperMac Self-Signed}"
+# Ưu tiên sử dụng chứng chỉ Developer ID Application từ BASAN CORPORATION nếu có trên Keychain,
+# hoặc chứng chỉ được chỉ định qua HYPERMAC_SIGN_IDENTITY / HyperMac Self-Signed.
 SIGN_KEYCHAIN="${HYPERMAC_SIGN_KEYCHAIN:-}"
 FIND_ARGS=()
 if [[ -n "${SIGN_KEYCHAIN}" ]]; then
     FIND_ARGS=("${SIGN_KEYCHAIN}")
 fi
-# Không dùng -v: trên runner CI, cert tự ký không được trust nên -v (valid only)
-# sẽ báo 0 identity dù vẫn ký được. codesign chỉ cần identity + private key.
-if security find-identity -p codesigning "${FIND_ARGS[@]}" 2>/dev/null | grep -qF "${SIGN_IDENTITY}"; then
+
+DETECTED_IDENTITIES=$(security find-identity -p codesigning "${FIND_ARGS[@]}" 2>/dev/null || true)
+
+if [[ -n "${HYPERMAC_SIGN_IDENTITY:-}" ]]; then
+    SIGN_IDENTITY="${HYPERMAC_SIGN_IDENTITY}"
+elif echo "$DETECTED_IDENTITIES" | grep -qF "Developer ID Application: BASAN CORPORATION (JFT5TLZ3HK)"; then
+    SIGN_IDENTITY="Developer ID Application: BASAN CORPORATION (JFT5TLZ3HK)"
+elif echo "$DETECTED_IDENTITIES" | grep -qF "HyperMac Self-Signed"; then
+    SIGN_IDENTITY="HyperMac Self-Signed"
+else
+    SIGN_IDENTITY=""
+fi
+
+if [[ -n "${SIGN_IDENTITY}" ]] && echo "$DETECTED_IDENTITIES" | grep -qF "${SIGN_IDENTITY}"; then
     echo "🔏 Code signing (${SIGN_IDENTITY})..."
-    CODESIGN_ARGS=(--force --deep --sign "${SIGN_IDENTITY}" --identifier "com.opensource.hypermac")
+    CODESIGN_ARGS=(--force --deep --sign "${SIGN_IDENTITY}" --timestamp --identifier "com.opensource.hypermac")
     if [[ -n "${SIGN_KEYCHAIN}" ]]; then
         CODESIGN_ARGS+=(--keychain "${SIGN_KEYCHAIN}")
     fi
     codesign "${CODESIGN_ARGS[@]}" "${APP_DIR}"
+    echo "🔍 Verifying code signature..."
+    codesign -dvvv "${APP_DIR}" 2>&1 | grep -E "Authority|TeamIdentifier|Timestamp" || true
 else
     echo "🔏 Code signing (ad-hoc — quyền Accessibility sẽ mất sau mỗi lần build)..."
     echo "   → Chạy ./scripts/setup-signing-identity.sh một lần để hết bị."
