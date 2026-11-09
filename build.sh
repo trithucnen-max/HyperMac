@@ -15,42 +15,44 @@ if [ "$CI" != "true" ] && [ "$1" != "--no-run" ]; then
     sleep 0.5
 fi
 
-# ── Step 1: Build (Default: Apple Silicon chip M / Optional: --universal) ──
-BUILD_UNIVERSAL=false
+# ── Step 1: Build (Universal 2: Hỗ trợ cả Intel x86_64 và Apple Silicon M1+ arm64) ──
+BUILD_ARM64_ONLY=false
 for arg in "$@"; do
-    if [ "$arg" = "--universal" ]; then
-        BUILD_UNIVERSAL=true
+    if [ "$arg" = "--arm64-only" ]; then
+        BUILD_ARM64_ONLY=true
     fi
 done
 
-if [ "$BUILD_UNIVERSAL" = "true" ]; then
-    echo "🔨 Building HyperMac (Release - Universal 2: arm64 + x86_64)..."
-    mkdir -p .build/bin_arm64 .build/bin_x86_64 .build/release
-    echo "  -> Compiling arm64 (Apple Silicon)..."
-    swift build -c release --triple arm64-apple-macosx >/dev/null 2>&1 || swift build -c release
-    if [ -f ".build/out/Products/Release/HyperMac" ]; then
-        cp .build/out/Products/Release/HyperMac .build/bin_arm64/HyperMac
+mkdir -p .build/bin_arm64 .build/bin_x86_64 .build/release
+
+if [ "$BUILD_ARM64_ONLY" = "true" ]; then
+    echo "⚡ Building HyperMac (Tốc độ cao - Chip M: M1/M2/M3/M4)..."
+    swift build -c release
+    BINARY=".build/release/HyperMac"
+else
+    echo "🔨 Building HyperMac (Universal 2: Hỗ trợ cả chip Intel và Apple Silicon M1+)..."
+    echo "  -> Compiling arm64 (Apple Silicon M1/M2/M3/M4)..."
+    swift build -c release --triple arm64-apple-macosx
+    if [ -f ".build/arm64-apple-macosx/release/HyperMac" ]; then
+        cp -f .build/arm64-apple-macosx/release/HyperMac .build/bin_arm64/HyperMac
     elif [ -f ".build/release/HyperMac" ]; then
-        cp .build/release/HyperMac .build/bin_arm64/HyperMac
+        cp -f .build/release/HyperMac .build/bin_arm64/HyperMac
     fi
 
-    echo "  -> Compiling x86_64 (Intel)..."
-    swift build -c release --triple x86_64-apple-macosx >/dev/null 2>&1 || true
-    if [ -f ".build/out/Products/Release/HyperMac" ]; then
-        cp .build/out/Products/Release/HyperMac .build/bin_x86_64/HyperMac
+    echo "  -> Compiling x86_64 (Intel Core i5/i7/i9/Xeon)..."
+    swift build -c release --triple x86_64-apple-macosx
+    if [ -f ".build/x86_64-apple-macosx/release/HyperMac" ]; then
+        cp -f .build/x86_64-apple-macosx/release/HyperMac .build/bin_x86_64/HyperMac
     fi
 
     BINARY=".build/release/HyperMac"
     if [ -f ".build/bin_arm64/HyperMac" ] && [ -f ".build/bin_x86_64/HyperMac" ]; then
-        echo "  -> Merging with lipo (Universal 2)..."
+        echo "  -> Merging with lipo (Universal 2: arm64 + x86_64)..."
         lipo -create .build/bin_arm64/HyperMac .build/bin_x86_64/HyperMac -output "$BINARY"
     elif [ -f ".build/bin_arm64/HyperMac" ]; then
-        cp .build/bin_arm64/HyperMac "$BINARY"
+        echo "⚠️ x86_64 build not found, using arm64 binary."
+        cp -f .build/bin_arm64/HyperMac "$BINARY"
     fi
-else
-    echo "⚡ Building HyperMac (Tốc độ cao - Chip M: M1/M2/M3/M4)..."
-    swift build -c release
-    BINARY=".build/release/HyperMac"
 fi
 
 if [ ! -f "$BINARY" ]; then

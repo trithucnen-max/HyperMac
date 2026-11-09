@@ -258,25 +258,37 @@ case "$1" in
         if [ "$RPM" -lt "$FMIN" ] || [ "$RPM" -gt "$FMAX" ]; then
             echo "ERROR: rpm out of range ($FMIN-$FMAX)"; exit 2
         fi
-        # float32 little-endian hex (vd 3000 -> 00803b45): ưu tiên mã hex 8 ký tự đã kiểm chứng từ Swift, fallback POSIX awk thuần
-        case "$HEX_ARG" in
-            [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
-                HEX=$(echo "$HEX_ARG" | tr 'A-F' 'a-f')
-                ;;
-            *)
-                HEX=$(awk -v v="$RPM" 'BEGIN {
-                    if (v <= 0) { printf "00000000"; exit }
-                    e = 0; t = v
-                    while (t >= 2.0) { t /= 2.0; e++ }
-                    m = int((t - 1.0) * 8388608.0 + 0.5)
-                    u = (e + 127) * 8388608 + m
-                    b0 = u % 256; u = int(u / 256)
-                    b1 = u % 256; u = int(u / 256)
-                    b2 = u % 256; b3 = int(u / 256) % 256
-                    printf "%02x%02x%02x%02x", b0, b1, b2, b3
-                }')
-                ;;
-        esac
+        # Tự động nhận diện kiểu dữ liệu key F{ID}Tg (fpe2 cho chip Intel hoặc flt cho chip Apple Silicon M1+)
+        TG_TYPE=$("$SMC" -k "F${ID}Tg" -r 2>/dev/null | awk '{print $2}' | tr -d '[]')
+        if [ "$TG_TYPE" = "fpe2" ]; then
+            # Intel Mac: fpe2 format gồm 2 bytes (RPM * 4) theo chuẩn big-endian hex (vd 2160 -> 21c0)
+            HEX=$(awk -v v="$RPM" 'BEGIN {
+                val = int(v * 4.0)
+                b0 = int(val / 256) % 256
+                b1 = val % 256
+                printf "%02x%02x", b0, b1
+            }')
+        else
+            # Apple Silicon Mac: float32 little-endian hex (vd 3000 -> 00803b45)
+            case "$HEX_ARG" in
+                [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
+                    HEX=$(echo "$HEX_ARG" | tr 'A-F' 'a-f')
+                    ;;
+                *)
+                    HEX=$(awk -v v="$RPM" 'BEGIN {
+                        if (v <= 0) { printf "00000000"; exit }
+                        e = 0; t = v
+                        while (t >= 2.0) { t /= 2.0; e++ }
+                        m = int((t - 1.0) * 8388608.0 + 0.5)
+                        u = (e + 127) * 8388608 + m
+                        b0 = u % 256; u = int(u / 256)
+                        b1 = u % 256; u = int(u / 256)
+                        b2 = u % 256; b3 = int(u / 256) % 256
+                        printf "%02x%02x%02x%02x", b0, b1, b2, b3
+                    }')
+                    ;;
+            esac
+        fi
         if check_key_exists "Ftst"; then
             "$SMC" -k Ftst -w 01 >/dev/null 2>&1 || true
         fi
