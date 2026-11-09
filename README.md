@@ -1,11 +1,11 @@
 # ⚡ HyperMac — Siêu Tiện Ích Tất-Cả-Trong-Một Cho Mac (Universal 2: Intel & Apple Silicon)
 
-[![Version](https://img.shields.io/badge/version-v2.0-blue.svg)](https://github.com/mrgoose000000-gif/HyperMac/releases/latest)
-[![Platform](https://img.shields.io/badge/platform-macOS%2014.0%2B-black.svg)](https://github.com/mrgoose000000-gif/HyperMac)
-[![Architecture](https://img.shields.io/badge/architecture-Universal%202%20(arm64%20%2B%20x86__64)-brightgreen.svg)](https://github.com/mrgoose000000-gif/HyperMac)
-[![Memory Footprint](https://img.shields.io/badge/RAM-~40MB-success.svg)](https://github.com/mrgoose000000-gif/HyperMac)
+[![Version](https://img.shields.io/badge/version-v2.0-blue.svg)](https://github.com/trithucnen-max/HyperMac/releases/latest)
+[![Platform](https://img.shields.io/badge/platform-macOS%2014.0%2B-black.svg)](https://github.com/trithucnen-max/HyperMac)
+[![Architecture](https://img.shields.io/badge/architecture-Universal%202%20(arm64%20%2B%20x86__64)-brightgreen.svg)](https://github.com/trithucnen-max/HyperMac)
+[![Memory Footprint](https://img.shields.io/badge/RAM-~40MB-success.svg)](https://github.com/trithucnen-max/HyperMac)
 [![License](https://img.shields.io/badge/license-MIT-purple.svg)](LICENSE)
-[![Signed](https://img.shields.io/badge/Codesign-BasanCorp_Developer_ID-success.svg)](https://github.com/mrgoose000000-gif/HyperMac)
+[![Signed](https://img.shields.io/badge/Codesign-BasanCorp_Developer_ID-success.svg)](https://github.com/trithucnen-max/HyperMac)
 [![Donate](https://img.shields.io/badge/❤️_Donate-Ủng_hộ-ff69b4.svg)](#-ủng-hộ-phát-triển-donate)
 
 > 🚀 **HyperMac** là bộ công cụ tối thượng viết bằng **Swift thuần** dành cho máy Mac chạy chip **Intel lẫn Apple Silicon (M1, M2, M3, M4...)**. Ứng dụng gom trọn tính năng của **9 ứng dụng rời rạc** vào một icon duy nhất trên thanh Menu Bar với mức tiêu hao RAM siêu nhẹ **chỉ ~40MB**:
@@ -19,9 +19,9 @@
 ### ⬇️ Bước 1: Tải bộ cài dựng sẵn
 Bấm vào nút bên dưới để tải về phiên bản mới nhất:
 
-[![Download HyperMac](https://img.shields.io/badge/📥_TẢI_VỀ-HyperMac.zip_(v2.0)-2563EB?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/mrgoose000000-gif/HyperMac/releases/latest/download/HyperMac.zip)
+[![Download HyperMac](https://img.shields.io/badge/📥_TẢI_VỀ-HyperMac.zip_(v2.0)-2563EB?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/trithucnen-max/HyperMac/releases/latest/download/HyperMac.zip)
 
-*(Hoặc vào trang [GitHub Releases](https://github.com/mrgoose000000-gif/HyperMac/releases) để xem danh sách tất cả các bản phát hành).*
+*(Hoặc vào trang [GitHub Releases](https://github.com/trithucnen-max/HyperMac/releases) để xem danh sách tất cả các bản phát hành).*
 
 ---
 
@@ -211,7 +211,7 @@ Yêu cầu: macOS 14.0 trở lên, Xcode Command Line Tools.
 
 ```bash
 # 1. Clone mã nguồn
-git clone https://github.com/mrgoose000000-gif/HyperMac.git
+git clone https://github.com/trithucnen-max/HyperMac.git
 cd HyperMac
 
 # 2. Biên dịch và đóng gói tự động

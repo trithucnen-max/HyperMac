@@ -2,6 +2,6 @@
   "version": "2.0",
   "name": "HyperMac v2.0 (Kiến trúc Modular UI, Zero-Polling, Tự do Hoá Bản quyền & Chứng chỉ BasanCorp)",
   "notes": "✨ Các nâng cấp đột phá trong phiên bản v2.0:\n- 🖥️ Hỗ trợ Universal 2 (Intel & Apple Silicon M1+): Chạy mượt mà, tối ưu native trên cả chip Intel lẫn Apple Silicon.\n- 🚀 Tái cấu trúc kiến trúc Modular UI: Giảm 88% dung lượng file Views.swift, phân tách thành 6 module giao diện độc lập tối ưu hiệu năng render.\n- 🛡️ Hiện đại hoá điều khiển quạt SMC: Viết lại thuật toán Float32 LE Hex & fpe2 bằng Swift thuần & POSIX awk, hỗ trợ cả Intel và Apple Silicon, bổ sung Dual PID Crash Watchdog tự phục hồi quạt an toàn.\n- ⚡ Adaptive Zero-Polling: Tự động ngắt 100% các vòng lặp quét định kỳ khi màn hình tắt hoặc khoá phiên, tiết kiệm pin tối đa.\n- 🔓 Tự do hoá bản quyền 100%: Xoá bỏ hoàn toàn cơ chế mã kích hoạt, Zalo QR modal và Cloudflare API, mở HyperMac lập tức không rào cản.\n- 🔏 Ký số chính thức: Chứng chỉ Developer ID Application từ BASAN CORPORATION (JFT5TLZ3HK), đảm bảo độ tin cậy và giữ nguyên quyền Accessibility/Screen Recording bền vững.",
-  "download_url": "https://github.com/mrgoose000000-gif/HyperMac/releases/download/v2.0/HyperMac.zip",
-  "html_url": "https://github.com/mrgoose000000-gif/HyperMac/releases/tag/v2.0"
+  "download_url": "https://github.com/trithucnen-max/HyperMac/releases/download/v2.0/HyperMac.zip",
+  "html_url": "https://github.com/trithucnen-max/HyperMac/releases/tag/v2.0"
 }

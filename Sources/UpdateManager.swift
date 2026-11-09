@@ -146,7 +146,7 @@ public class UpdateManager: NSObject, ObservableObject, URLSessionDownloadDelega
             var apiUpToDate: (ver: String, notes: String, dl: URL?, html: URL?)? = nil
 
             // Attempt 1: Standard GitHub Releases API
-            let releaseUrl = URL(string: "https://api.github.com/repos/mrgoose000000-gif/HyperMac/releases/latest")!
+            let releaseUrl = URL(string: "https://api.github.com/repos/trithucnen-max/HyperMac/releases/latest")!
             var request = URLRequest(url: releaseUrl)
             request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
             request.setValue("HyperMac-App", forHTTPHeaderField: "User-Agent")
@@ -193,7 +193,7 @@ public class UpdateManager: NSObject, ObservableObject, URLSessionDownloadDelega
             }
 
             // Attempt 2: Fast raw manifest fallback (raw.githubusercontent.com - no rate limits)
-            let manifestUrl = URL(string: "https://raw.githubusercontent.com/mrgoose000000-gif/HyperMac/main/version.json")!
+            let manifestUrl = URL(string: "https://raw.githubusercontent.com/trithucnen-max/HyperMac/main/version.json")!
             var manifestReq = URLRequest(url: manifestUrl)
             manifestReq.cachePolicy = .reloadIgnoringLocalCacheData
             manifestReq.timeoutInterval = 8.0
@@ -207,7 +207,7 @@ public class UpdateManager: NSObject, ObservableObject, URLSessionDownloadDelega
                         let manifest = try decoder.decode(VersionManifest.self, from: mData)
 
                         let dlUrl = manifest.downloadUrl.flatMap { URL(string: $0) }
-                        let pageUrl = manifest.htmlUrl.flatMap { URL(string: $0) } ?? URL(string: "https://github.com/mrgoose000000-gif/HyperMac/releases")
+                        let pageUrl = manifest.htmlUrl.flatMap { URL(string: $0) } ?? URL(string: "https://github.com/trithucnen-max/HyperMac/releases")
                         let notes = manifest.notes ?? manifest.name ?? "Bản cập nhật mới dành cho HyperMac."
 
                         self.handleDiscoveredVersion(
@@ -289,7 +289,7 @@ public class UpdateManager: NSObject, ObservableObject, URLSessionDownloadDelega
         if Self.updatesDisabled { return }
         guard let url = downloadUrl else {
             // If no direct binary asset attached, open GitHub release page
-            if let html = htmlUrl ?? URL(string: "https://github.com/mrgoose000000-gif/HyperMac/releases") {
+            if let html = htmlUrl ?? URL(string: "https://github.com/trithucnen-max/HyperMac/releases") {
                 NSWorkspace.shared.open(html)
             }
             return
@@ -306,7 +306,7 @@ public class UpdateManager: NSObject, ObservableObject, URLSessionDownloadDelega
     }
 
     public func openReleasePage() {
-        if let url = htmlUrl ?? URL(string: "https://github.com/mrgoose000000-gif/HyperMac/releases") {
+        if let url = htmlUrl ?? URL(string: "https://github.com/trithucnen-max/HyperMac/releases") {
             NSWorkspace.shared.open(url)
         }
     }
